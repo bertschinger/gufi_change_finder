@@ -92,35 +92,3 @@ fn main() {
     println!("cargo:rustc-link-lib=scoutwrap");
 
 }
-
-fn include_header(header_path: &str, bindings_path: &str, log_file: &mut File, top_path: &str) {
-
-
-    let bindings = bindgen::Builder::default()
-                    .header(header_path)
-                    .clang_arg(format!("-I{}/src/scoutfs", top_path))
-                    .clang_arg("-I/usr/include/libxml2")
-                    .generate()
-                    .expect("Failed to generate bindings for {header_path_str");
-    
-    bindings.write_to_file("src/bindings.tmp").expect("Failed to write to bindings.tmp");
-    let mut tmp_bindings = fs::OpenOptions::new()
-            .read(true)
-            .open("src/bindings.tmp")
-            .unwrap();
-
-    let mut real_bindings = fs::OpenOptions::new()
-            .append(true)
-            .create(true)
-            .open(bindings_path)
-            .unwrap();
-
-    let _result = io::copy(&mut tmp_bindings, &mut real_bindings);
-
-    fs::remove_file("src/bindings.tmp").expect("Failed to remove src/bindings.tmp");
-
-    let log_string = format!("Wrote bindings from {header_path} to {bindings_path}\n"); 
-    log_file.write_all(log_string.as_bytes()).expect("Failed to write to build.log");
-
-    
-}
